@@ -36,12 +36,12 @@ public class MutablePropertyValues implements PropertyValues {
         // There is no replacement of existing property values.
         if (original != null) {
             PropertyValue[] pvs = original.getPropertyValues();
-            this.propertyValueList = new ArrayList<>(pvs.length);
+            this.propertyValueList = new ArrayList<PropertyValue>(pvs.length);
             for (PropertyValue pv : pvs) {
                 this.propertyValueList.add(new PropertyValue(pv));
             }
         } else {
-            this.propertyValueList = new ArrayList<>(0);
+            this.propertyValueList = new ArrayList<PropertyValue>(0);
         }
     }
 

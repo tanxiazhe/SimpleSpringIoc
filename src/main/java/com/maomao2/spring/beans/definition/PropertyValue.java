@@ -16,8 +16,6 @@
 
 package com.maomao2.spring.beans.definition;
 
-import com.maomao2.spring.beans.creation.BeanWrapper;
-
 /**
  * Object to hold information and value for an individual bean property.
  * Using an object here, rather than just storing all properties in
