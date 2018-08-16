@@ -98,7 +98,7 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry {
     protected <T> T doGetBean(
             final String name, final Class<T> requiredType, final Object[] args) {
         Object bean = null;
-        // return the actual bean name,ä¸»è¦�æ˜¯åŒºåˆ†FactoryBeanï¼Œè¿™ä¸ªbeanç‰¹æ®Šï¼Œä»¥&å¼€å§‹
+        // return the actual bean name
         final String beanName = transformedBeanName(name);
 
         // Eagerly check singleton cache for manually registered singletons.

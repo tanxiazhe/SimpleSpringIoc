@@ -1,5 +1,6 @@
 package com.maomao2.spring.beans.creation;
 
+import com.maomao2.spring.beans.parsing.XmlBeanDefinitionReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -61,8 +62,6 @@ public class DefaultBeanFactory extends AbstractBeanFactory implements Configure
      * this to provide a set of resource locations to load bean definitions from.
      * 
      * @return an array of resource locations, or {@code null} if none
-     * @see #getResources
-     * @see #getResourcePatternResolver
      */
     protected String[] getConfigLocations() {
         return (this.configLocations != null ? this.configLocations : getDefaultConfigLocations());
@@ -125,114 +124,14 @@ public class DefaultBeanFactory extends AbstractBeanFactory implements Configure
     private DefaultBeanFactory obtainFreshBeanFactory() {
         String[] configLocations = getConfigLocations();
         if (configLocations != null) {
-            loadBeanDefinitions(configLocations);
+          // Create a new XmlBeanDefinitionReader for the given BeanFactory.
+          XmlBeanDefinitionReader beanDefinitionReader = new XmlBeanDefinitionReader(this);
+          beanDefinitionReader.loadBeanDefinitions(configLocations);
         }
         return this;
     }
 
-    private void loadBeanDefinitions(String[] configLocations) {
-        // Create a new XmlBeanDefinitionReader for the given BeanFactory.
-        // XmlBeanDefinitionReader beanDefinitionReader = new XmlBeanDefinitionReader(beanFactory);
-        //
-        // // Configure the bean definition reader with this context's
-        // // resource loading environment.
-        // beanDefinitionReader.setEnvironment(this.getEnvironment());
-        // beanDefinitionReader.setResourceLoader(this);
-        // beanDefinitionReader.setEntityResolver(new ResourceEntityResolver(this));
-        //
-        // // Allow a subclass to provide custom initialization of the reader,
-        // // then proceed with actually loading the bean definitions.
-        // initBeanDefinitionReader(beanDefinitionReader);
-        // loadBeanDefinitions(beanDefinitionReader);
-        //
-        int counter = 0;
-        for (String location : configLocations) {
-            counter += loadBeanDefinitions(location);
-        }
 
-    }
-
-    private int loadBeanDefinitions(String location) {
-        doLoadBeanDefinitions(location);
-        return 0;
-    }
-
-    protected void doLoadBeanDefinitions(String location) {
-        // XMLReader parser = XMLReaderFactory.createXMLReader();
-        ApplicationContextHandler applicationContextHandler = new ApplicationContextHandler();
-        // parser.setContentHandler(applicationContextHandler);
-        // parser.parse(location);
-        Map<String, Object> container = applicationContextHandler.getContainer();
-        for (String beanName : container.keySet()) {
-            BeanDefinition beanDefinition = null;
-            // TODO
-            // beanDefinition= parseBeanDefinitionElement(ele, beanName, containingBean);
-            registerBeanDefinition(beanName, beanDefinition);
-        }
-    }
-
-    /**
-     * Parse the bean definition itself, without regard to name or aliases. May return
-     * {@code null} if problems occurred during the parsing of the bean definition.
-     */
-    public AbstractBeanDefinition parseBeanDefinitionElement(
-            Element ele, String beanName, BeanDefinition containingBean) {
-
-        // this.parseState.push(new BeanEntry(beanName));
-        //
-        // String className = null;
-        // if (ele.hasAttribute(CLASS_ATTRIBUTE)) {
-        // className = ele.getAttribute(CLASS_ATTRIBUTE).trim();
-        // }
-        //
-        // try {
-        // String parent = null;
-        // if (ele.hasAttribute(PARENT_ATTRIBUTE)) {
-        // parent = ele.getAttribute(PARENT_ATTRIBUTE);
-        // }
-        // AbstractBeanDefinition bd = createBeanDefinition(className, parent);
-        //
-        // parseBeanDefinitionAttributes(ele, beanName, containingBean, bd);
-        // bd.setDescription(DomUtils.getChildElementValueByTagName(ele, DESCRIPTION_ELEMENT));
-        //
-        // parseMetaElements(ele, bd);
-        // parseLookupOverrideSubElements(ele, bd.getMethodOverrides());
-        // parseReplacedMethodSubElements(ele, bd.getMethodOverrides());
-        //
-        // parseConstructorArgElements(ele, bd);
-        // parsePropertyElements(ele, bd);
-        // parseQualifierElements(ele, bd);
-        //
-        // bd.setResource(this.readerContext.getResource());
-        // bd.setSource(extractSource(ele));
-        //
-        // return bd;
-        // } catch (ClassNotFoundException ex) {
-        // error("Bean class [" + className + "] not found", ele, ex);
-        // } catch (NoClassDefFoundError err) {
-        // error("Class that bean class [" + className + "] depends on not found", ele, err);
-        // } catch (Throwable ex) {
-        // error("Unexpected failure during bean definition parsing", ele, ex);
-        // } finally {
-        // this.parseState.pop();
-        // }
-
-        return null;
-    }
-
-    // private AbstractBeanDefinition createBeanDefinition(String className,
-    // String parent) {
-    // GenericBeanDefinition bd = new GenericBeanDefinition();
-    // bd.setParentName(parentName);
-    // if (className != null) {
-    // if (classLoader != null) {
-    // bd.setBeanClass(ClassUtils.forName(className, classLoader));
-    // } else {
-    // bd.setBeanClassName(className);
-    // }
-    // }
-    // return bd;
-    // }
 
     @Override
     public Object getBean(String name) throws BeansException {
@@ -244,7 +143,7 @@ public class DefaultBeanFactory extends AbstractBeanFactory implements Configure
         BeanDefinition oldBeanDefinition = this.beanDefinitionMap.get(beanName);
         if (oldBeanDefinition != null) {
             if (!oldBeanDefinition.equals(beanDefinition)) {
-                this.logger.info("Overriding bean definition for bean '" + beanName +
+                this.logger.error("Overriding bean definition for bean '" + beanName +
                         "' with a different definition: replacing [" + oldBeanDefinition +
                         "] with [" + beanDefinition + "]");
             }

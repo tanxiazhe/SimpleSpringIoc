@@ -17,9 +17,7 @@ public interface BeanDefinitionRegistry {
      * @throws BeanDefinitionStoreException
      *             if the BeanDefinition is invalid
      *             or if there is already a BeanDefinition for the specified bean name
-     *             (and we are not allowed to override it)
-     * @see RootBeanDefinition
-     * @see ChildBeanDefinition
+     *             (and we are not allowed to override it)     *
      */
     void registerBeanDefinition(String beanName, BeanDefinition beanDefinition) throws BeanDefinitionStoreException;
 

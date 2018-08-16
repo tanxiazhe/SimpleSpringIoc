@@ -80,10 +80,7 @@ public class MutablePropertyValues implements PropertyValues {
         return this;
     }
 
-    private void addPropertyValue(PropertyValue propertyValue) {
-        propertyValueList.add(propertyValue);
 
-    }
 
     /**
      * Modify a PropertyValue object held in this object.
@@ -150,5 +147,21 @@ public class MutablePropertyValues implements PropertyValues {
     public boolean isEmpty() {
         return this.propertyValueList.isEmpty();
     }
-
+    /**
+     * Add a PropertyValue object, replacing any existing one for the
+     * corresponding property or getting merged with it (if applicable).
+     * @param pv PropertyValue object to add
+     * @return this in order to allow for adding multiple property values in a chain
+     */
+    public MutablePropertyValues addPropertyValue(PropertyValue pv) {
+        for (int i = 0; i < this.propertyValueList.size(); i++) {
+            PropertyValue currentPv = this.propertyValueList.get(i);
+            if (currentPv.getName().equals(pv.getName())) {
+                setPropertyValueAt(pv, i);
+                return this;
+            }
+        }
+        this.propertyValueList.add(pv);
+        return this;
+    }
 }
