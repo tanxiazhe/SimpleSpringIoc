@@ -1,17 +1,14 @@
 package com.maomao2.spring.beans.creation;
 
-import com.maomao2.spring.beans.parsing.XmlBeanDefinitionReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
-import org.w3c.dom.Element;
 
-import com.maomao2.spring.beans.definition.AbstractBeanDefinition;
 import com.maomao2.spring.beans.definition.BeanDefinition;
-import com.maomao2.spring.beans.parsing.ApplicationContextHandler;
+import com.maomao2.spring.beans.parsing.XmlBeanDefinitionReader;
 import com.maomao2.spring.exception.BeanDefinitionStoreException;
 import com.maomao2.spring.exception.BeansException;
 import com.maomao2.spring.exception.NoSuchBeanDefinitionException;
@@ -32,7 +29,7 @@ public class DefaultBeanFactory extends AbstractBeanFactory implements Configure
         this(new String[] { configLocation });
     }
 
-    public DefaultBeanFactory(String[] strings) {
+    public DefaultBeanFactory(String[] configLocations) {
         setConfigLocations(configLocations);
         refresh();
     }
@@ -124,18 +121,21 @@ public class DefaultBeanFactory extends AbstractBeanFactory implements Configure
     private DefaultBeanFactory obtainFreshBeanFactory() {
         String[] configLocations = getConfigLocations();
         if (configLocations != null) {
-          // Create a new XmlBeanDefinitionReader for the given BeanFactory.
-          XmlBeanDefinitionReader beanDefinitionReader = new XmlBeanDefinitionReader(this);
-          beanDefinitionReader.loadBeanDefinitions(configLocations);
+            // Create a new XmlBeanDefinitionReader for the given BeanFactory.
+            XmlBeanDefinitionReader beanDefinitionReader = new XmlBeanDefinitionReader(this);
+            beanDefinitionReader.loadBeanDefinitions(configLocations);
         }
         return this;
     }
 
-
-
     @Override
     public Object getBean(String name) throws BeansException {
-        return super.getBean(name);
+        return super.getBean(name, null);
+    }
+
+    @Override
+    public <T> T getBean(Class<T> requiredType) throws BeansException {
+        return super.getBean(null, requiredType);
     }
 
     public void registerBeanDefinition(String beanName, BeanDefinition beanDefinition)
@@ -157,10 +157,6 @@ public class DefaultBeanFactory extends AbstractBeanFactory implements Configure
         this.beanDefinitionMap.remove(beanName);
     }
 
-    public BeanDefinition getBeanDefinition(String beanName) throws NoSuchBeanDefinitionException {
-        return this.beanDefinitionMap.get(beanName);
-    }
-
     public boolean containsBeanDefinition(String beanName) {
         return this.beanDefinitionMap.containsKey(beanName);
     }
@@ -172,5 +168,17 @@ public class DefaultBeanFactory extends AbstractBeanFactory implements Configure
 
     public int getBeanDefinitionCount() {
         return this.beanDefinitionMap.size();
+    }
+
+    @Override
+    public BeanDefinition getBeanDefinition(String beanName) throws NoSuchBeanDefinitionException {
+        BeanDefinition bd = this.beanDefinitionMap.get(beanName);
+        if (bd == null) {
+            if (this.logger.isTraceEnabled()) {
+                this.logger.trace("No bean named '" + beanName + "' found in " + this);
+            }
+            throw new NoSuchBeanDefinitionException(beanName);
+        }
+        return bd;
     }
 }
