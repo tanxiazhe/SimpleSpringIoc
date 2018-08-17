@@ -17,8 +17,8 @@
 package com.maomao2.spring.beans.definition;
 
 /**
- * Immutable placeholder class used for a property value object when it's
- * a reference to another bean in the factory, to be resolved at runtime.
+ * Immutable placeholder class used for a property value object when it's a reference to another bean in the factory, to
+ * be resolved at runtime.
  *
  * @author Rod Johnson
  * @author Juergen Hoeller
@@ -27,22 +27,20 @@ package com.maomao2.spring.beans.definition;
  */
 public class RuntimeBeanReference {
 
-    private final String beanName;
+  private final String beanName;
 
-    /**
-     * Create a new RuntimeBeanReference to the given bean name,
-     * without explicitly marking it as reference to a bean in
-     * the parent factory.
-     * 
-     * @param beanName
-     *            name of the target bean
-     */
-    public RuntimeBeanReference(String beanName) {
-        this.beanName = beanName;
-    }
+  /**
+   * Create a new RuntimeBeanReference to the given bean name, without explicitly marking it as reference to a bean in
+   * the parent factory.
+   *
+   * @param beanName name of the target bean
+   */
+  public RuntimeBeanReference(String beanName) {
+    this.beanName = beanName;
+  }
 
-    public String getBeanName() {
-        return this.beanName;
-    }
+  public String getBeanName() {
+    return this.beanName;
+  }
 
 }

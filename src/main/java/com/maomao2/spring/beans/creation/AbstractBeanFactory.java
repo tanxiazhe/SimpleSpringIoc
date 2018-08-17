@@ -1,6 +1,5 @@
 package com.maomao2.spring.beans.creation;
 
-import com.maomao2.spring.beans.parsing.BeanDefinitionValueResolver;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -25,6 +24,7 @@ import com.maomao2.spring.beans.definition.BeanDefinition;
 import com.maomao2.spring.beans.definition.PropertyValue;
 import com.maomao2.spring.beans.definition.PropertyValues;
 import com.maomao2.spring.beans.definition.RootBeanDefinition;
+import com.maomao2.spring.beans.parsing.BeanDefinitionValueResolver;
 import com.maomao2.spring.exception.BeanCreationException;
 import com.maomao2.spring.exception.BeanInstantiationException;
 import com.maomao2.spring.exception.BeansException;
@@ -376,8 +376,8 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry {
   /**
    * Apply the given property values, resolving any runtime references to other beans in this bean factory. Must use
    * deep copy, so we don't permanently modify this property.
-   *  @param bean the bean
-   * @param beanName
+   *
+   * @param bean the bean
    * @param pvs the new property values
    */
   protected void applyPropertyValues(Object bean, String beanName, PropertyValues pvs, RootBeanDefinition mbd) {

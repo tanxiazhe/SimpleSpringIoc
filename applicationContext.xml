@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans>
 
-    <bean id="pad1" class="com.maomao2.spring.beans.creation.Pad" scope="singleton">
-        <constructor-arg>
-            <value type="java.lang.double">1999.9</value>
-        </constructor-arg>
-    </bean>
-    <!-- 懒加载 -->
-    <bean id="pad2" class="com.maomao2.spring.beans.creation.Pad" lazy-init="true"
-        autowire="no"></bean>
+  <bean id="pad1" class="com.maomao2.spring.beans.creation.Pad" scope="singleton">
+    <constructor-arg>
+      <value type="java.lang.double">1999.9</value>
+    </constructor-arg>
+  </bean>
+  <!-- 懒加载 -->
+  <bean id="pad2" class="com.maomao2.spring.beans.creation.Pad" lazy-init="true"
+    autowire="no"></bean>
 
-    <bean id="person" class="com.maomao2.spring.beans.creation.Person" autowire="byName">
-        <property name="name" value="Yrion" phone="12222222222"></property>
-    </bean>
+  <bean id="person" class="com.maomao2.spring.beans.creation.Person" autowire="byName">
+    <property name="name" value="Yrion" phone="12222222222"></property>
+  </bean>
 
 </beans>

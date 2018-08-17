@@ -41,10 +41,12 @@ public class XmlBeanDefinitionReader implements BeanDefinitiontReader {
     this.registry = registry;
   }
 
+  @Override
   public BeanDefinitionRegistry getRegistry() {
     return this.registry;
   }
 
+  @Override
   public void loadBeanDefinitions(String[] configLocations) {
 
     for (String location : configLocations) {

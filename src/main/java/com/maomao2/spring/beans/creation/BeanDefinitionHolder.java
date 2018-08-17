@@ -19,64 +19,57 @@ package com.maomao2.spring.beans.creation;
 import com.maomao2.spring.beans.definition.BeanDefinition;
 
 /**
- * Holder for a BeanDefinition with name and aliases.
- * Can be registered as a placeholder for an inner bean.
+ * Holder for a BeanDefinition with name and aliases. Can be registered as a placeholder for an inner bean.
  *
  * <p>
- * Can also be used for programmatic registration of inner bean
- * definitions. If you don't care about BeanNameAware and the like,
- * registering RootBeanDefinition or ChildBeanDefinition is good enough.
+ * Can also be used for programmatic registration of inner bean definitions. If you don't care about BeanNameAware and
+ * the like, registering RootBeanDefinition or ChildBeanDefinition is good enough.
  *
  * @author Juergen Hoeller
  * @since 1.0.2
- *
  */
 public class BeanDefinitionHolder {
 
-    private final BeanDefinition beanDefinition;
+  private final BeanDefinition beanDefinition;
 
-    private final String beanName;
+  private final String beanName;
 
-    /**
-     * Create a new BeanDefinitionHolder.
-     * 
-     * @param beanDefinition
-     *            the BeanDefinition to wrap
-     * @param beanName
-     *            the name of the bean, as specified for the bean definition
-     */
-    public BeanDefinitionHolder(BeanDefinition beanDefinition, String beanName) {
-        this.beanDefinition = beanDefinition;
-        this.beanName = beanName;
-    }
+  /**
+   * Create a new BeanDefinitionHolder.
+   *
+   * @param beanDefinition the BeanDefinition to wrap
+   * @param beanName the name of the bean, as specified for the bean definition
+   */
+  public BeanDefinitionHolder(BeanDefinition beanDefinition, String beanName) {
+    this.beanDefinition = beanDefinition;
+    this.beanName = beanName;
+  }
 
-    /**
-     * Copy constructor: Create a new BeanDefinitionHolder with the
-     * same contents as the given BeanDefinitionHolder instance.
-     * <p>
-     * Note: The wrapped BeanDefinition reference is taken as-is;
-     * it is {@code not} deeply copied.
-     * 
-     * @param beanDefinitionHolder
-     *            the BeanDefinitionHolder to copy
-     */
-    public BeanDefinitionHolder(BeanDefinitionHolder beanDefinitionHolder) {
-        this.beanDefinition = beanDefinitionHolder.getBeanDefinition();
-        this.beanName = beanDefinitionHolder.getBeanName();
-    }
+  /**
+   * Copy constructor: Create a new BeanDefinitionHolder with the same contents as the given BeanDefinitionHolder
+   * instance.
+   * <p>
+   * Note: The wrapped BeanDefinition reference is taken as-is; it is {@code not} deeply copied.
+   *
+   * @param beanDefinitionHolder the BeanDefinitionHolder to copy
+   */
+  public BeanDefinitionHolder(BeanDefinitionHolder beanDefinitionHolder) {
+    this.beanDefinition = beanDefinitionHolder.getBeanDefinition();
+    this.beanName = beanDefinitionHolder.getBeanName();
+  }
 
-    /**
-     * Return the wrapped BeanDefinition.
-     */
-    public BeanDefinition getBeanDefinition() {
-        return this.beanDefinition;
-    }
+  /**
+   * Return the wrapped BeanDefinition.
+   */
+  public BeanDefinition getBeanDefinition() {
+    return this.beanDefinition;
+  }
 
-    /**
-     * Return the primary name of the bean, as specified for the bean definition.
-     */
-    public String getBeanName() {
-        return this.beanName;
-    }
+  /**
+   * Return the primary name of the bean, as specified for the bean definition.
+   */
+  public String getBeanName() {
+    return this.beanName;
+  }
 
 }

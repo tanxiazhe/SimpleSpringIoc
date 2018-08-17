@@ -4,6 +4,6 @@ import org.w3c.dom.Document;
 
 public interface DocumentHolder {
 
-    Document loadDocument(String filePath);
+  Document loadDocument(String filePath);
 
 }

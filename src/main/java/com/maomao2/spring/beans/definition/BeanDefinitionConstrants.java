@@ -1,11 +1,11 @@
 package com.maomao2.spring.beans.definition;
 
 public final class BeanDefinitionConstrants {
+
   public static final String MULTI_VALUE_ATTRIBUTE_DELIMITERS = ",; ";
 
   /**
-   * Value of a T/F attribute that represents true.
-   * Anything else represents false. Case seNsItive.
+   * Value of a T/F attribute that represents true. Anything else represents false. Case seNsItive.
    */
   public static final String NESTED_BEANS_ELEMENT = "beans";
   public static final String TRUE_VALUE = "true";
