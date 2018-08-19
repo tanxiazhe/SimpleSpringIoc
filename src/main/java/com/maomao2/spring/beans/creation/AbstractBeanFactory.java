@@ -564,7 +564,6 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry {
    * @return BeanWrapper for the new instance
    * @see #instantiateUsingFactoryMethod
    * @see #autowireConstructor
-   *
    */
   protected Object createBeanInstance(String beanName, RootBeanDefinition mbd, Object[] args) {
     // Make sure bean class is actually resolved at this point.
@@ -581,7 +580,7 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry {
 //    }else
 
     if (mbd.getResolvedAutowireMode() == RootBeanDefinition.AUTOWIRE_CONSTRUCTOR ||
-            mbd.hasConstructorArgumentValues()) {
+        mbd.hasConstructorArgumentValues()) {
       return autowireConstructor(beanName, mbd, args);
     } else {
       // No special handling: simply use no-arg constructor.

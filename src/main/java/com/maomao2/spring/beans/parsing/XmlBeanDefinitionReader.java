@@ -48,8 +48,9 @@ public class XmlBeanDefinitionReader implements BeanDefinitiontReader {
   /**
    * Set the ClassLoader to use for bean classes.
    * <p>Default is {@code null}, which suggests to not load bean classes
-   * eagerly but rather to just register bean definitions with class names,
-   * with the corresponding Classes to be resolved later (or never).
+   * eagerly but rather to just register bean definitions with class names, with the corresponding Classes to be
+   * resolved later (or never).
+   *
    * @see Thread#getContextClassLoader()
    */
   public void setBeanClassLoader(ClassLoader beanClassLoader) {
@@ -355,7 +356,7 @@ public class XmlBeanDefinitionReader implements BeanDefinitiontReader {
     } else if (hasValueAttribute) {
       TypedStringValue valueHolder = new TypedStringValue(ele.getAttribute(VALUE_ATTRIBUTE));
       return valueHolder;
-    }  else if (subElement != null) {
+    } else if (subElement != null) {
       return parsePropertySubElement(subElement, bd);
     } else {
       // Neither child element nor "ref" or "value" attribute found.
@@ -382,14 +383,10 @@ public class XmlBeanDefinitionReader implements BeanDefinitiontReader {
   }
 
   /**
-   * Parse a value, ref or collection sub-element of a property or
-   * constructor-arg element.
+   * Parse a value, ref or collection sub-element of a property or constructor-arg element.
    *
-   * @param ele
-   *            subelement of property element; we don't know which yet
-   * @param defaultValueType
-   *            the default type (class name) for any
-   *            {@code <value>} tag that might be created
+   * @param ele subelement of property element; we don't know which yet
+   * @param defaultValueType the default type (class name) for any {@code <value>} tag that might be created
    */
   public Object parsePropertySubElement(Element ele, BeanDefinition bd, String defaultValueType) {
 //     if (nodeNameEquals(ele, BeanDefinitionConstrants.BEAN_ELEMENT)) {
@@ -421,7 +418,7 @@ public class XmlBeanDefinitionReader implements BeanDefinitiontReader {
 //    } else if (nodeNameEquals(ele, BeanDefinitionConstrants.IDREF_ELEMENT)) {
 //      return parseIdRefElement(ele);
 //    } else
-      if (nodeNameEquals(ele, BeanDefinitionConstrants.VALUE_ELEMENT)) {
+    if (nodeNameEquals(ele, BeanDefinitionConstrants.VALUE_ELEMENT)) {
       return parseValueElement(ele, defaultValueType);
 //    } else if (nodeNameEquals(ele, NULL_ELEMENT)) {
 //      // It's a distinguished null value. Let's wrap it in a TypedStringValue
@@ -489,8 +486,8 @@ public class XmlBeanDefinitionReader implements BeanDefinitiontReader {
   /**
    * Extracts the text value from the given DOM element, ignoring XML comments.
    * <p>Appends all CharacterData nodes and EntityReference nodes into a single
-   * String value, excluding Comment nodes. Only exposes actual user-specified
-   * text, no default values of any kind.
+   * String value, excluding Comment nodes. Only exposes actual user-specified text, no default values of any kind.
+   *
    * @see CharacterData
    * @see EntityReference
    * @see Comment
@@ -510,7 +507,6 @@ public class XmlBeanDefinitionReader implements BeanDefinitiontReader {
 
   /**
    * Build a typed String value Object for the given raw value.
-   *
    */
   protected TypedStringValue buildTypedStringValue(String value, String targetTypeName)
       throws ClassNotFoundException {

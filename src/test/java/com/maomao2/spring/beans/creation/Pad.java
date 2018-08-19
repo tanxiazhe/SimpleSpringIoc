@@ -5,7 +5,8 @@ public class Pad {
   private double price;
 
   public Pad() {
-
+    System.out.println("default constuctor");
+    this.price = 22;
   }
 
   public Pad(double price) {

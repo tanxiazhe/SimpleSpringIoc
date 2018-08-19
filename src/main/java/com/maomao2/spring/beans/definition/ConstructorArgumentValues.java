@@ -117,14 +117,16 @@ public class ConstructorArgumentValues {
   public void addGenericArgumentValue(Object value, String type) {
     this.genericArgumentValues.add(new ValueHolder(value, type));
   }
+
   /**
    * Add a generic argument value to be matched by type or name (if available).
    * <p>Note: A single generic argument value will just be used once,
    * rather than matched multiple times.
+   *
    * @param newValue the argument value in the form of a ValueHolder
    * <p>Note: Identical ValueHolder instances will only be registered once,
-   * to allow for merging and re-merging of argument value definitions. Distinct
-   * ValueHolder instances carrying the same content are of course allowed.
+   * to allow for merging and re-merging of argument value definitions. Distinct ValueHolder instances carrying the same
+   * content are of course allowed.
    */
   public void addGenericArgumentValue(ValueHolder newValue) {
     if (!this.genericArgumentValues.contains(newValue)) {
@@ -133,15 +135,17 @@ public class ConstructorArgumentValues {
   }
 
   /**
-   * Add a generic argument value, merging the new value (typically a collection)
-   * with the current value if demanded: see {@link org.springframework.beans.Mergeable}.
+   * Add a generic argument value, merging the new value (typically a collection) with the current value if demanded:
+   * see {@link org.springframework.beans.Mergeable}.
+   *
    * @param newValue the argument value in the form of a ValueHolder
    */
   private void addOrMergeGenericArgumentValue(ValueHolder newValue) {
 
-      this.genericArgumentValues.add(newValue);
+    this.genericArgumentValues.add(newValue);
 
   }
+
   /**
    * Look for a generic argument value that matches the given type.
    *
