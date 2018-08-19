@@ -1,7 +1,5 @@
 package com.maomao2.spring.beans.parsing;
 
-import static com.maomao2.spring.beans.definition.BeanDefinitionConstrants.VALUE_ATTRIBUTE;
-
 import com.maomao2.spring.util.ClassUtils;
 import java.util.HashSet;
 import java.util.Set;
@@ -339,7 +337,7 @@ public class XmlBeanDefinitionReader implements BeanDefinitiontReader {
     }
 
     boolean hasRefAttribute = ele.hasAttribute(BeanDefinitionConstrants.REF_ATTRIBUTE);
-    boolean hasValueAttribute = ele.hasAttribute(VALUE_ATTRIBUTE);
+    boolean hasValueAttribute = ele.hasAttribute(BeanDefinitionConstrants.VALUE_ATTRIBUTE);
     if ((hasRefAttribute && hasValueAttribute) ||
         ((hasRefAttribute || hasValueAttribute) && subElement != null)) {
       logger.error(elementName +
@@ -354,7 +352,7 @@ public class XmlBeanDefinitionReader implements BeanDefinitiontReader {
       RuntimeBeanReference ref = new RuntimeBeanReference(refName);
       return ref;
     } else if (hasValueAttribute) {
-      TypedStringValue valueHolder = new TypedStringValue(ele.getAttribute(VALUE_ATTRIBUTE));
+      TypedStringValue valueHolder = new TypedStringValue(ele.getAttribute(BeanDefinitionConstrants.VALUE_ATTRIBUTE));
       return valueHolder;
     } else if (subElement != null) {
       return parsePropertySubElement(subElement, bd);

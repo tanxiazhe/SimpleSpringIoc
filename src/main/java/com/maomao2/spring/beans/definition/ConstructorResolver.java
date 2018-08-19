@@ -56,12 +56,6 @@ public class ConstructorResolver {
 
       Class<?>[] paramTypes = candidate.getParameterTypes();
 
-      if (constructorToUse != null && argsToUse.length > paramTypes.length) {
-        // Already found greedy constructor that can be satisfied ->
-        // do not look any further, there are only less greedy
-        // constructors left.
-        break;
-      }
       if (paramTypes.length < minNrOfArgs) {
         continue;
       }

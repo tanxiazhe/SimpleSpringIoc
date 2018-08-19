@@ -16,4 +16,8 @@
     <property name="phone" value="12222222222"></property>
   </bean>
 
+  <bean id = "person2" class="com.maomao2.spring.beans.creation.Person">-->
+    <constructor-arg type="java.lang.String" value="wukong"></constructor-arg>
+    <constructor-arg ref="pad1"></constructor-arg>
+  </bean>
 </beans>

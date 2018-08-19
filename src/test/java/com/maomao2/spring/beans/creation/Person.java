@@ -3,6 +3,16 @@ package com.maomao2.spring.beans.creation;
 public class Person {
 
   private String name;
+  private String address;
+  private long phone;
+
+  public Person(String name, Pad pad) {
+    this.name = name;
+    this.pad = pad;
+  }
+
+  private Pad pad;
+
 
   public String getName() {
     return name;
@@ -28,8 +38,13 @@ public class Person {
     this.phone = phone;
   }
 
-  private String address;
-  private long phone;
+  public Pad getPad() {
+    return pad;
+  }
+
+  public void setPad(Pad pad) {
+    this.pad = pad;
+  }
 
   public Person() {
   }
@@ -40,7 +55,8 @@ public class Person {
     this.address = address;
     this.phone = phone;
   }
-  public String sayHello(String msg){
+
+  public String sayHello(String msg) {
     return (msg);
   }
 
