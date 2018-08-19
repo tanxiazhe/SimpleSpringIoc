@@ -20,4 +20,10 @@
     <constructor-arg type="java.lang.String" value="wukong"></constructor-arg>
     <constructor-arg ref="pad1"></constructor-arg>
   </bean>
+
+  <bean id="person3" class="com.maomao2.spring.beans.creation.Person" autowire="byName">
+    <property name="name" value="Yrion" ></property>
+    <property name="address" value="earth"></property>
+    <property name="pad" ref="pad2"></property>
+  </bean>
 </beans>
