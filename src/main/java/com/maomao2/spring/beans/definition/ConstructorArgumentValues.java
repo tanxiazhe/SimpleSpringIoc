@@ -28,8 +28,29 @@ public class ConstructorArgumentValues {
    * @param index the index in the constructor argument list
    * @param value the argument value
    */
-  public void addIndexedArgumentValue(int index, Object value) {
+  public void
+
+  addIndexedArgumentValue(int index, Object value) {
     addIndexedArgumentValue(index, new ValueHolder(value));
+  }
+  /**
+   * Add an argument value for the given index in the constructor argument list.
+   * @param index the index in the constructor argument list
+   * @param newValue the argument value in the form of a ValueHolder
+   */
+  public void addIndexedArgumentValue(int index, ValueHolder newValue) {
+    addOrMergeIndexedArgumentValue(index, newValue);
+  }
+
+  /**
+   * Add an argument value for the given index in the constructor argument list,
+   * merging the new value (typically a collection) with the current value
+   * if demanded: see {@link org.springframework.beans.Mergeable}.
+   * @param key the index in the constructor argument list
+   * @param newValue the argument value in the form of a ValueHolder
+   */
+  private void addOrMergeIndexedArgumentValue(Integer key, ValueHolder newValue) {
+    this.indexedArgumentValues.put(key, newValue);
   }
 
   /**

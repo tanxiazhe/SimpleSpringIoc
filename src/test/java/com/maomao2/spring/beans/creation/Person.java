@@ -40,6 +40,9 @@ public class Person {
     this.address = address;
     this.phone = phone;
   }
+  public String sayHello(String msg){
+    return (msg);
+  }
 
   @Override
   public String toString() {
