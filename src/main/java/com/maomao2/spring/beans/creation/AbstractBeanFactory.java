@@ -1,5 +1,7 @@
 package com.maomao2.spring.beans.creation;
 
+import com.maomao2.spring.beans.definition.ConstructorArgumentValues;
+import com.maomao2.spring.beans.definition.ConstructorResolver;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -39,7 +41,7 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry {
    * ClassLoader to resolve bean class names with, if necessary
    */
   private ClassLoader beanClassLoader = ClassUtils.getDefaultClassLoader();
-
+  private final ConstructorResolver constructorResolver = new ConstructorResolver(this);
   /**
    * BeanPostProcessors to apply in createBean
    */
@@ -331,6 +333,22 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry {
     // Instantiate the bean.
     final Object bean = createBeanInstance(beanName, mbd, args);
 
+//    // Eagerly cache singletons to be able to resolve circular references
+//    // even when triggered by lifecycle interfaces like BeanFactoryAware.
+//    boolean earlySingletonExposure = mbd.isSingleton() ;
+//    if (earlySingletonExposure) {
+//      if (logger.isDebugEnabled()) {
+//        logger.debug("Eagerly caching bean '" + beanName +
+//            "' to allow for resolving potential circular references");
+//      }
+//      addSingletonFactory(beanName, new ObjectFactory<Object>() {
+//        @Override
+//        public Object getObject() throws BeansException {
+//          return getEarlyBeanReference(beanName, mbd, bean);
+//        }
+//      });
+//    }
+
     // Initialize the bean instance.
     Object exposedObject = bean;
     try {
@@ -396,6 +414,8 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry {
       Field field = null;
       try {
         field = bean.getClass().getDeclaredField(propertyName);
+
+        resolvedValue = ConvertUtils.convert(resolvedValue, bean.getClass().getDeclaredField(propertyName).getType());
         field.setAccessible(true);
         field.set(bean, resolvedValue);
       } catch (NoSuchFieldException e) {
@@ -544,7 +564,7 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry {
    * @return BeanWrapper for the new instance
    * @see #instantiateUsingFactoryMethod
    * @see #autowireConstructor
-   * @see #instantiateBean
+   *
    */
   protected Object createBeanInstance(String beanName, RootBeanDefinition mbd, Object[] args) {
     // Make sure bean class is actually resolved at this point.
@@ -555,109 +575,36 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry {
           "Bean class isn't public, and non-public access not allowed: " + beanClass.getName());
     }
 
-    if (mbd.getFactoryMethodName() != null) {
-      return instantiateUsingFactoryMethod(beanName, mbd, args);
-    }
+    //TODO
+//    if (mbd.getFactoryMethodName() != null) {
+//      return instantiateUsingFactoryMethod(beanName, mbd, args);
+//    }else
 
-    // TODO
-    if (args != null) {
-      Constructor<?>[] ctors = null;
-      return autowireConstructor(beanName, mbd, ctors, args);
+    if (mbd.getResolvedAutowireMode() == RootBeanDefinition.AUTOWIRE_CONSTRUCTOR ||
+            mbd.hasConstructorArgumentValues()) {
+      return autowireConstructor(beanName, mbd, args);
+    } else {
+      // No special handling: simply use no-arg constructor.
+      return instantiateBeanUsingNoArgs(beanName, mbd);
     }
+  }
 
-    // No special handling: simply use no-arg constructor.
-    return instantiateBean(beanName, mbd);
+  private Object instantiateBeanUsingNoArgs(String beanName, RootBeanDefinition mbd) {
+    return this.constructorResolver.instantiateBeanUsingNoArgs(beanName, mbd);
   }
 
   public Object instantiateUsingFactoryMethod(
       final String beanName, final RootBeanDefinition mbd, final Object[] explicitArgs) {
-    try {
-      Object beanInstance;
-      Method factoryMethodToUse = null;
-      Object factoryBean = null;
-      Object[] argsToUse = null;
-      beanInstance = this.instantiate(
-          mbd, beanName, this, factoryBean, factoryMethodToUse, argsToUse);
-      return beanInstance;
-    } catch (Throwable ex) {
-      throw new BeanCreationException(beanName,
-          "Bean instantiation via factory method failed", ex);
-    }
+    return this.constructorResolver.instantiateUsingFactoryMethod(beanName, mbd, explicitArgs);
   }
 
-  private Object instantiate(RootBeanDefinition mbd, String beanName, AbstractBeanFactory abstractBeanFactory,
-      Object factoryBean, Method factoryMethod, Object[] args) {
-    try {
-      return factoryMethod.invoke(factoryBean, args);
-    } catch (IllegalArgumentException ex) {
-      throw new BeanInstantiationException(factoryMethod,
-          "Illegal arguments to factory method '" + factoryMethod.getName() + "'; ", ex);
-    } catch (IllegalAccessException ex) {
-      throw new BeanInstantiationException(factoryMethod,
-          "Cannot access factory method '" + factoryMethod.getName() + "'; is it public?", ex);
-    } catch (InvocationTargetException ex) {
-      String msg = "Factory method '" + factoryMethod.getName() + "' threw exception";
-      throw new BeanInstantiationException(factoryMethod, msg, ex.getTargetException());
-    }
-  }
 
   private Object autowireConstructor(final String beanName, final RootBeanDefinition mbd,
-      Constructor<?>[] chosenCtors, final Object[] explicitArgs) {
+      final Object[] explicitArgs) {
 
-    Constructor<?> constructorToUse = null;
-    Object[] argsToUse = null;
-
-    try {
-      Object beanInstance;
-      beanInstance = instantiate(
-          mbd, beanName, this, constructorToUse, argsToUse);
-
-      return beanInstance;
-    } catch (Throwable ex) {
-      throw new BeanCreationException(beanName,
-          "Bean instantiation via constructor failed", ex);
-    }
+    return this.constructorResolver.autowireConstructor(beanName, mbd, explicitArgs);
   }
 
-  private Object instantiate(RootBeanDefinition mbd, String beanName, AbstractBeanFactory abstractBeanFactory,
-      Constructor<?> ctor, Object[] args) {
-    try {
-      ReflectionUtils.makeAccessible(ctor);
-      return ctor.newInstance(args);
-    } catch (InstantiationException ex) {
-      throw new BeanInstantiationException(ctor.getDeclaringClass(),
-          "Is it an abstract class?", ex);
-    } catch (IllegalAccessException ex) {
-      throw new BeanInstantiationException(ctor.getDeclaringClass(),
-          "Is the constructor accessible?", ex);
-    } catch (IllegalArgumentException ex) {
-      throw new BeanInstantiationException(ctor.getDeclaringClass(),
-          "Illegal arguments for constructor", ex);
-    } catch (InvocationTargetException ex) {
-      throw new BeanInstantiationException(ctor.getDeclaringClass(),
-          "Constructor threw exception", ex.getTargetException());
-    }
-  }
-
-  /**
-   * Instantiate the given bean using its default constructor.
-   *
-   * @param beanName the name of the bean
-   * @param mbd the bean definition for the bean
-   * @return BeanWrapper for the new instance
-   */
-  protected Object instantiateBean(final String beanName, final RootBeanDefinition mbd) {
-    final Class<?> clazz = mbd.getBeanClass();
-    Constructor<?> constructorToUse = null;
-    try {
-      constructorToUse = clazz.getDeclaredConstructor((Class[]) null);
-
-      return constructorToUse.newInstance(null);
-    } catch (Exception ex) {
-      throw new BeanInstantiationException(clazz, "No default constructor found", ex);
-    }
-
-  }
 
   /**
    * Apply before-instantiation post-processors, resolving whether there is a before-instantiation shortcut for the

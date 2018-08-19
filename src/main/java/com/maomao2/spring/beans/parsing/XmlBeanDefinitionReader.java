@@ -2,12 +2,16 @@ package com.maomao2.spring.beans.parsing;
 
 import static com.maomao2.spring.beans.definition.BeanDefinitionConstrants.VALUE_ATTRIBUTE;
 
+import com.maomao2.spring.util.ClassUtils;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.w3c.dom.CharacterData;
+import org.w3c.dom.Comment;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.EntityReference;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -28,7 +32,7 @@ public class XmlBeanDefinitionReader implements BeanDefinitiontReader {
   Logger logger = Logger.getLogger(getClass());
 
   private final BeanDefinitionRegistry registry;
-
+  private ClassLoader beanClassLoader;
   protected DocumentHolder documentHolder = new XMLDocumentHolder();
 
   /**
@@ -39,6 +43,22 @@ public class XmlBeanDefinitionReader implements BeanDefinitiontReader {
 
   public XmlBeanDefinitionReader(BeanDefinitionRegistry registry) {
     this.registry = registry;
+  }
+
+  /**
+   * Set the ClassLoader to use for bean classes.
+   * <p>Default is {@code null}, which suggests to not load bean classes
+   * eagerly but rather to just register bean definitions with class names,
+   * with the corresponding Classes to be resolved later (or never).
+   * @see Thread#getContextClassLoader()
+   */
+  public void setBeanClassLoader(ClassLoader beanClassLoader) {
+    this.beanClassLoader = beanClassLoader;
+  }
+
+  @Override
+  public ClassLoader getBeanClassLoader() {
+    return this.beanClassLoader;
   }
 
   @Override
@@ -335,6 +355,8 @@ public class XmlBeanDefinitionReader implements BeanDefinitiontReader {
     } else if (hasValueAttribute) {
       TypedStringValue valueHolder = new TypedStringValue(ele.getAttribute(VALUE_ATTRIBUTE));
       return valueHolder;
+    }  else if (subElement != null) {
+      return parsePropertySubElement(subElement, bd);
     } else {
       // Neither child element nor "ref" or "value" attribute found.
       logger.error(elementName + " must specify a ref or value");
@@ -354,6 +376,393 @@ public class XmlBeanDefinitionReader implements BeanDefinitiontReader {
       }
     }
   }
+
+  public Object parsePropertySubElement(Element ele, BeanDefinition bd) {
+    return parsePropertySubElement(ele, bd, null);
+  }
+
+  /**
+   * Parse a value, ref or collection sub-element of a property or
+   * constructor-arg element.
+   *
+   * @param ele
+   *            subelement of property element; we don't know which yet
+   * @param defaultValueType
+   *            the default type (class name) for any
+   *            {@code <value>} tag that might be created
+   */
+  public Object parsePropertySubElement(Element ele, BeanDefinition bd, String defaultValueType) {
+//     if (nodeNameEquals(ele, BeanDefinitionConstrants.BEAN_ELEMENT)) {
+//      BeanDefinitionHolder nestedBd = parseBeanDefinitionElement(ele, bd);
+//      if (nestedBd != null) {
+//        nestedBd = decorateBeanDefinitionIfRequired(ele, nestedBd, bd);
+//      }
+//      return nestedBd;
+//    } else if (nodeNameEquals(ele, BeanDefinitionConstrants.REF_ELEMENT)) {
+//      // A generic reference to any name of any bean.
+//      String refName = ele.getAttribute(BeanDefinitionConstrants.BEAN_REF_ATTRIBUTE);
+//      boolean toParent = false;
+//      if (!StringUtils.hasLength(refName)) {
+//        // A reference to the id of another bean in a parent context.
+//        refName = ele.getAttribute(BeanDefinitionConstrants.PARENT_REF_ATTRIBUTE);
+//        toParent = true;
+//        if (!StringUtils.hasLength(refName)) {
+//          error("'bean' or 'parent' is required for <ref> element", ele);
+//          return null;
+//        }
+//      }
+//      if (!StringUtils.hasText(refName)) {
+//        error("<ref> element contains empty target attribute", ele);
+//        return null;
+//      }
+//      RuntimeBeanReference ref = new RuntimeBeanReference(refName, toParent);
+//      ref.setSource(extractSource(ele));
+//      return ref;
+//    } else if (nodeNameEquals(ele, BeanDefinitionConstrants.IDREF_ELEMENT)) {
+//      return parseIdRefElement(ele);
+//    } else
+      if (nodeNameEquals(ele, BeanDefinitionConstrants.VALUE_ELEMENT)) {
+      return parseValueElement(ele, defaultValueType);
+//    } else if (nodeNameEquals(ele, NULL_ELEMENT)) {
+//      // It's a distinguished null value. Let's wrap it in a TypedStringValue
+//      // object in order to preserve the source location.
+//      TypedStringValue nullHolder = new TypedStringValue(null);
+//      nullHolder.setSource(extractSource(ele));
+//      return nullHolder;
+//    } else if (nodeNameEquals(ele, ARRAY_ELEMENT)) {
+//      return parseArrayElement(ele, bd);
+//    } else if (nodeNameEquals(ele, LIST_ELEMENT)) {
+//      return parseListElement(ele, bd);
+//    } else if (nodeNameEquals(ele, SET_ELEMENT)) {
+//      return parseSetElement(ele, bd);
+//    } else if (nodeNameEquals(ele, MAP_ELEMENT)) {
+//      return parseMapElement(ele, bd);
+//    } else if (nodeNameEquals(ele, PROPS_ELEMENT)) {
+//      return parsePropsElement(ele);
+    } else {
+      logger.error("Unknown property sub-element: [" + ele.getNodeName() + "]");
+      return null;
+    }
+  }
+
+//  /**
+//   * Return a typed String value Object for the given 'idref' element.
+//   */
+//  public Object parseIdRefElement(Element ele) {
+//    // A generic reference to any name of any bean.
+//    String refName = ele.getAttribute(BEAN_REF_ATTRIBUTE);
+//    if (!StringUtils.hasLength(refName)) {
+//      error("'bean' is required for <idref> element", ele);
+//      return null;
+//    }
+//    if (!StringUtils.hasText(refName)) {
+//      error("<idref> element contains empty target attribute", ele);
+//      return null;
+//    }
+//    RuntimeBeanNameReference ref = new RuntimeBeanNameReference(refName);
+//    ref.setSource(extractSource(ele));
+//    return ref;
+//  }
+
+  /**
+   * Return a typed String value Object for the given value element.
+   */
+  public Object parseValueElement(Element ele, String defaultTypeName) {
+    // It's a literal value.
+    String value = getTextValue(ele);
+    String specifiedTypeName = ele.getAttribute(BeanDefinitionConstrants.TYPE_ATTRIBUTE);
+    String typeName = specifiedTypeName;
+    if (!StringUtils.hasText(typeName)) {
+      typeName = defaultTypeName;
+    }
+    try {
+      TypedStringValue typedValue = buildTypedStringValue(value, typeName);
+
+      typedValue.setSpecifiedTypeName(specifiedTypeName);
+      return typedValue;
+    } catch (ClassNotFoundException ex) {
+      logger.error("Type class [" + typeName + "] not found for <value> element");
+      return value;
+    }
+  }
+
+  /**
+   * Extracts the text value from the given DOM element, ignoring XML comments.
+   * <p>Appends all CharacterData nodes and EntityReference nodes into a single
+   * String value, excluding Comment nodes. Only exposes actual user-specified
+   * text, no default values of any kind.
+   * @see CharacterData
+   * @see EntityReference
+   * @see Comment
+   */
+  public static String getTextValue(Element valueEle) {
+
+    StringBuilder sb = new StringBuilder();
+    NodeList nl = valueEle.getChildNodes();
+    for (int i = 0; i < nl.getLength(); i++) {
+      Node item = nl.item(i);
+      if ((item instanceof CharacterData && !(item instanceof Comment)) || item instanceof EntityReference) {
+        sb.append(item.getNodeValue());
+      }
+    }
+    return sb.toString();
+  }
+
+  /**
+   * Build a typed String value Object for the given raw value.
+   *
+   */
+  protected TypedStringValue buildTypedStringValue(String value, String targetTypeName)
+      throws ClassNotFoundException {
+
+    ClassLoader classLoader = this.getBeanClassLoader();
+    TypedStringValue typedValue;
+    if (!StringUtils.hasText(targetTypeName)) {
+      typedValue = new TypedStringValue(value);
+    } else if (classLoader != null) {
+      Class<?> targetType = ClassUtils.forName(targetTypeName, classLoader);
+      typedValue = new TypedStringValue(value, targetType);
+    } else {
+      typedValue = new TypedStringValue(value, targetTypeName);
+    }
+    return typedValue;
+  }
+
+//  /**
+//   * Parse an array element.
+//   */
+//  public Object parseArrayElement(Element arrayEle, BeanDefinition bd) {
+//    String elementType = arrayEle.getAttribute(VALUE_TYPE_ATTRIBUTE);
+//    NodeList nl = arrayEle.getChildNodes();
+//    ManagedArray target = new ManagedArray(elementType, nl.getLength());
+//    target.setSource(extractSource(arrayEle));
+//    target.setElementTypeName(elementType);
+//    target.setMergeEnabled(parseMergeAttribute(arrayEle));
+//    parseCollectionElements(nl, target, bd, elementType);
+//    return target;
+//  }
+//
+//  /**
+//   * Parse a list element.
+//   */
+//  public List<Object> parseListElement(Element collectionEle, BeanDefinition bd) {
+//    String defaultElementType = collectionEle.getAttribute(VALUE_TYPE_ATTRIBUTE);
+//    NodeList nl = collectionEle.getChildNodes();
+//    ManagedList<Object> target = new ManagedList<>(nl.getLength());
+//    target.setSource(extractSource(collectionEle));
+//    target.setElementTypeName(defaultElementType);
+//    target.setMergeEnabled(parseMergeAttribute(collectionEle));
+//    parseCollectionElements(nl, target, bd, defaultElementType);
+//    return target;
+//  }
+//
+//  /**
+//   * Parse a set element.
+//   */
+//  public Set<Object> parseSetElement(Element collectionEle, BeanDefinition bd) {
+//    String defaultElementType = collectionEle.getAttribute(VALUE_TYPE_ATTRIBUTE);
+//    NodeList nl = collectionEle.getChildNodes();
+//    ManagedSet<Object> target = new ManagedSet<>(nl.getLength());
+//    target.setSource(extractSource(collectionEle));
+//    target.setElementTypeName(defaultElementType);
+//    target.setMergeEnabled(parseMergeAttribute(collectionEle));
+//    parseCollectionElements(nl, target, bd, defaultElementType);
+//    return target;
+//  }
+//
+//  protected void parseCollectionElements(
+//      NodeList elementNodes, Collection<Object> target, BeanDefinition bd, String defaultElementType) {
+//
+//    for (int i = 0; i < elementNodes.getLength(); i++) {
+//      Node node = elementNodes.item(i);
+//      if (node instanceof Element && !nodeNameEquals(node, DESCRIPTION_ELEMENT)) {
+//        target.add(parsePropertySubElement((Element) node, bd, defaultElementType));
+//      }
+//    }
+//  }
+//
+//  /**
+//   * Parse a map element.
+//   */
+//  public Map<Object, Object> parseMapElement(Element mapEle, BeanDefinition bd) {
+//    String defaultKeyType = mapEle.getAttribute(KEY_TYPE_ATTRIBUTE);
+//    String defaultValueType = mapEle.getAttribute(VALUE_TYPE_ATTRIBUTE);
+//
+//    List<Element> entryEles = DomUtils.getChildElementsByTagName(mapEle, ENTRY_ELEMENT);
+//    ManagedMap<Object, Object> map = new ManagedMap<>(entryEles.size());
+//    map.setSource(extractSource(mapEle));
+//    map.setKeyTypeName(defaultKeyType);
+//    map.setValueTypeName(defaultValueType);
+//    map.setMergeEnabled(parseMergeAttribute(mapEle));
+//
+//    for (Element entryEle : entryEles) {
+//      // Should only have one value child element: ref, value, list, etc.
+//      // Optionally, there might be a key child element.
+//      NodeList entrySubNodes = entryEle.getChildNodes();
+//      Element keyEle = null;
+//      Element valueEle = null;
+//      for (int j = 0; j < entrySubNodes.getLength(); j++) {
+//        Node node = entrySubNodes.item(j);
+//        if (node instanceof Element) {
+//          Element candidateEle = (Element) node;
+//          if (nodeNameEquals(candidateEle, KEY_ELEMENT)) {
+//            if (keyEle != null) {
+//              error("<entry> element is only allowed to contain one <key> sub-element", entryEle);
+//            } else {
+//              keyEle = candidateEle;
+//            }
+//          } else {
+//            // Child element is what we're looking for.
+//            if (nodeNameEquals(candidateEle, DESCRIPTION_ELEMENT)) {
+//              // the element is a <description> -> ignore it
+//            } else if (valueEle != null) {
+//              error("<entry> element must not contain more than one value sub-element", entryEle);
+//            } else {
+//              valueEle = candidateEle;
+//            }
+//          }
+//        }
+//      }
+//
+//      // Extract key from attribute or sub-element.
+//      Object key = null;
+//      boolean hasKeyAttribute = entryEle.hasAttribute(KEY_ATTRIBUTE);
+//      boolean hasKeyRefAttribute = entryEle.hasAttribute(KEY_REF_ATTRIBUTE);
+//      if ((hasKeyAttribute && hasKeyRefAttribute) ||
+//          ((hasKeyAttribute || hasKeyRefAttribute)) && keyEle != null) {
+//        error("<entry> element is only allowed to contain either " +
+//            "a 'key' attribute OR a 'key-ref' attribute OR a <key> sub-element", entryEle);
+//      }
+//      if (hasKeyAttribute) {
+//        key = buildTypedStringValueForMap(entryEle.getAttribute(KEY_ATTRIBUTE), defaultKeyType, entryEle);
+//      } else if (hasKeyRefAttribute) {
+//        String refName = entryEle.getAttribute(KEY_REF_ATTRIBUTE);
+//        if (!StringUtils.hasText(refName)) {
+//          error("<entry> element contains empty 'key-ref' attribute", entryEle);
+//        }
+//        RuntimeBeanReference ref = new RuntimeBeanReference(refName);
+//        ref.setSource(extractSource(entryEle));
+//        key = ref;
+//      } else if (keyEle != null) {
+//        key = parseKeyElement(keyEle, bd, defaultKeyType);
+//      } else {
+//        error("<entry> element must specify a key", entryEle);
+//      }
+//
+//      // Extract value from attribute or sub-element.
+//      Object value = null;
+//      boolean hasValueAttribute = entryEle.hasAttribute(VALUE_ATTRIBUTE);
+//      boolean hasValueRefAttribute = entryEle.hasAttribute(VALUE_REF_ATTRIBUTE);
+//      boolean hasValueTypeAttribute = entryEle.hasAttribute(VALUE_TYPE_ATTRIBUTE);
+//      if ((hasValueAttribute && hasValueRefAttribute) ||
+//          ((hasValueAttribute || hasValueRefAttribute)) && valueEle != null) {
+//        error("<entry> element is only allowed to contain either " +
+//            "'value' attribute OR 'value-ref' attribute OR <value> sub-element", entryEle);
+//      }
+//      if ((hasValueTypeAttribute && hasValueRefAttribute) ||
+//          (hasValueTypeAttribute && !hasValueAttribute) ||
+//          (hasValueTypeAttribute && valueEle != null)) {
+//        error("<entry> element is only allowed to contain a 'value-type' " +
+//            "attribute when it has a 'value' attribute", entryEle);
+//      }
+//      if (hasValueAttribute) {
+//        String valueType = entryEle.getAttribute(VALUE_TYPE_ATTRIBUTE);
+//        if (!StringUtils.hasText(valueType)) {
+//          valueType = defaultValueType;
+//        }
+//        value = buildTypedStringValueForMap(entryEle.getAttribute(VALUE_ATTRIBUTE), valueType, entryEle);
+//      } else if (hasValueRefAttribute) {
+//        String refName = entryEle.getAttribute(VALUE_REF_ATTRIBUTE);
+//        if (!StringUtils.hasText(refName)) {
+//          error("<entry> element contains empty 'value-ref' attribute", entryEle);
+//        }
+//        RuntimeBeanReference ref = new RuntimeBeanReference(refName);
+//        ref.setSource(extractSource(entryEle));
+//        value = ref;
+//      } else if (valueEle != null) {
+//        value = parsePropertySubElement(valueEle, bd, defaultValueType);
+//      } else {
+//        error("<entry> element must specify a value", entryEle);
+//      }
+//
+//      // Add final key and value to the Map.
+//      map.put(key, value);
+//    }
+//
+//    return map;
+//  }
+//
+//  /**
+//   * Build a typed String value Object for the given raw value.
+//   *
+//   * @see org.springframework.beans.factory.config.TypedStringValue
+//   */
+//  protected final Object buildTypedStringValueForMap(String value, String defaultTypeName, Element entryEle) {
+//    try {
+//      TypedStringValue typedValue = buildTypedStringValue(value, defaultTypeName);
+//      typedValue.setSource(extractSource(entryEle));
+//      return typedValue;
+//    } catch (ClassNotFoundException ex) {
+//      error("Type class [" + defaultTypeName + "] not found for Map key/value type", entryEle, ex);
+//      return value;
+//    }
+//  }
+//
+//  /**
+//   * Parse a key sub-element of a map element.
+//   */
+//  protected Object parseKeyElement(Element keyEle, BeanDefinition bd, String defaultKeyTypeName) {
+//    NodeList nl = keyEle.getChildNodes();
+//    Element subElement = null;
+//    for (int i = 0; i < nl.getLength(); i++) {
+//      Node node = nl.item(i);
+//      if (node instanceof Element) {
+//        // Child element is what we're looking for.
+//        if (subElement != null) {
+//          error("<key> element must not contain more than one value sub-element", keyEle);
+//        } else {
+//          subElement = (Element) node;
+//        }
+//      }
+//    }
+//    return parsePropertySubElement(subElement, bd, defaultKeyTypeName);
+//  }
+//
+//  /**
+//   * Parse a props element.
+//   */
+//  public Properties parsePropsElement(Element propsEle) {
+//    ManagedProperties props = new ManagedProperties();
+//    props.setSource(extractSource(propsEle));
+//    props.setMergeEnabled(parseMergeAttribute(propsEle));
+//
+//    List<Element> propEles = DomUtils.getChildElementsByTagName(propsEle, PROP_ELEMENT);
+//    for (Element propEle : propEles) {
+//      String key = propEle.getAttribute(KEY_ATTRIBUTE);
+//      // Trim the text value to avoid unwanted whitespace
+//      // caused by typical XML formatting.
+//      String value = DomUtils.getTextValue(propEle).trim();
+//      TypedStringValue keyHolder = new TypedStringValue(key);
+//      keyHolder.setSource(extractSource(propEle));
+//      TypedStringValue valueHolder = new TypedStringValue(value);
+//      valueHolder.setSource(extractSource(propEle));
+//      props.put(keyHolder, valueHolder);
+//    }
+//
+//    return props;
+//  }
+//
+//  /**
+//   * Parse the merge attribute of a collection element, if any.
+//   */
+//  public boolean parseMergeAttribute(Element collectionElement) {
+//    String value = collectionElement.getAttribute(MERGE_ATTRIBUTE);
+//    if (DEFAULT_VALUE.equals(value)) {
+//      value = this.defaults.getMerge();
+//    }
+//    return TRUE_VALUE.equals(value);
+//  }
+//
 
   /**
    * Create a new GenericBeanDefinition for the given class name *

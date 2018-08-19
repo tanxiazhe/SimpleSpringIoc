@@ -21,5 +21,12 @@ public interface BeanDefinitiontReader {
    * @param configLocations the resource descriptor
    */
   void loadBeanDefinitions(String[] configLocations);
+  /**
+   * Return the class loader to use for bean classes.
+   * <p>{@code null} suggests to not load bean classes eagerly
+   * but rather to just register bean definitions with class names,
+   * with the corresponding Classes to be resolved later (or never).
+   */
+  ClassLoader getBeanClassLoader();
 
 }

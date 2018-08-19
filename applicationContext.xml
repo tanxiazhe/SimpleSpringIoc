@@ -3,7 +3,7 @@
 
   <bean id="pad1" class="com.maomao2.spring.beans.creation.Pad" scope="singleton">
     <constructor-arg>
-      <value type="java.lang.double">1999.9</value>
+      <value type="java.lang.Double">1999.9</value>
     </constructor-arg>
   </bean>
   <!-- 懒加载 -->
@@ -11,7 +11,9 @@
     autowire="no"></bean>
 
   <bean id="person" class="com.maomao2.spring.beans.creation.Person" autowire="byName">
-    <property name="name" value="Yrion" phone="12222222222"></property>
+    <property name="name" value="Yrion" ></property>
+    <property name="address" value="earth"></property>
+    <property name="phone" value="12222222222"></property>
   </bean>
 
 </beans>

@@ -10,7 +10,7 @@ public class TestDefaultBeanFactory {
     Person person = factory.getBean("person", Person.class);
     System.out.println(person);
 
-    Pad p1 = factory.getBean("pad1", Pad.class);
-    System.out.println(p1.getPrice());
+//    Pad p1 = factory.getBean("pad1", Pad.class);
+//    System.out.println(p1.getPrice());
   }
 }
